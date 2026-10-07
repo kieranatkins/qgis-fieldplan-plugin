@@ -21,7 +21,7 @@ repository=https://github.com/kieranatkins/qgis-fieldplan-plugin
 
 hasProcessingProvider=no
 
-tags=fieldplan, geospatial, remotesensing, indices
+tags=vector, python, field, geospatial, remote sensing, planning, spatial planning, shapefile
 
 homepage=https://github.com/kieranatkins/qgis-fieldplan-plugin
 category=Plugins
@@ -32,4 +32,5 @@ deprecated=False
 
 changelog=
     0.1.0 - Initial release
-        - Converted from QgsProcessingAlgorithm to plugin
+        - Converted from QgsProcessingAlgorithm to plugin, display diagram to user, renamed parameters, allow for grid boundaries to have margins, included log text box and progress bar
+
