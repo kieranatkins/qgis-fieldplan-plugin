@@ -1,0 +1,35 @@
+[general]
+name=Field Plan Creator
+qgisMinimumVersion=3.28
+qgisMaximumVersion=4.99
+description=Field plan creator is a plugin to generate geospatial field plan grids for use with remote sensing equipment and GPS-enabled farming equipment.
+version=0.1
+author=Kieran Atkins
+email=kia10@aber.ac.uk
+
+about=Field plan creator is a plugin to generate geospatial field plan grids for use with remote sensing equipment and GPS-enabled farming equipment.
+
+    Features:
+    - Generate geospatial field plans based on outlined grid parameters
+    - Support for different forms of ID systems (e.g. serpentine)
+    - Generate multiple grids with different parametes along the field plan
+    - Optional outputs include guidance lines, alley lines and grid boundaries
+    - Built in base python with no dependencies
+
+tracker=https://github.com/kieranatkins/qgis-fieldplan-plugin/issues
+repository=https://github.com/kieranatkins/qgis-fieldplan-plugin
+
+hasProcessingProvider=no
+
+tags=fieldplan, geospatial, remotesensing, indices
+
+homepage=https://github.com/kieranatkins/qgis-fieldplan-plugin
+category=Plugins
+icon=icons/icon.png
+
+experimental=False
+deprecated=False
+
+changelog=
+    0.1.0 - Initial release
+        - Converted from QgsProcessingAlgorithm to plugin

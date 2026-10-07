@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="28.321569mm"
+   height="28.795946mm"
+   viewBox="0 0 28.321569 28.795946"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)"
+   sodipodi:docname="icon.svg"
+   inkscape:export-filename="icon.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="true"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="1.735704"
+     inkscape:cx="181.77062"
+     inkscape:cy="113.49861"
+     inkscape:window-width="1920"
+     inkscape:window-height="1131"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     inkscape:export-bgcolor="#ffffff00" />
+  <defs
+     id="defs1">
+    <linearGradient
+       id="linearGradient193"
+       inkscape:collect="always">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop193" />
+      <stop
+         style="stop-color:#000000;stop-opacity:0;"
+         offset="1"
+         id="stop194" />
+    </linearGradient>
+    <marker
+       style="overflow:visible"
+       id="Stop-7"
+       refX="0"
+       refY="0"
+       orient="auto"
+       markerWidth="1"
+       markerHeight="8"
+       viewBox="0 0 1 8"
+       preserveAspectRatio="xMidYMid">
+      <path
+         style="fill:none;stroke:context-stroke;stroke-width:1"
+         d="M 0,4 V -4"
+         id="path171-8" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="marker1"
+       refX="0"
+       refY="0"
+       orient="auto"
+       markerWidth="1"
+       markerHeight="8"
+       viewBox="0 0 1 8"
+       preserveAspectRatio="xMidYMid">
+      <path
+         style="fill:none;stroke:context-stroke;stroke-width:1"
+         d="M 0,4 V -4"
+         id="path1" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Stop-7-9-6-2"
+       refX="0"
+       refY="0"
+       orient="auto"
+       markerWidth="1"
+       markerHeight="8"
+       viewBox="0 0 1 8"
+       preserveAspectRatio="xMidYMid">
+      <path
+         style="fill:none;stroke:context-stroke;stroke-width:1"
+         d="M 0,4 V -4"
+         id="path171-8-1-2-0" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="marker2"
+       refX="0"
+       refY="0"
+       orient="auto"
+       markerWidth="1"
+       markerHeight="8"
+       viewBox="0 0 1 8"
+       preserveAspectRatio="xMidYMid">
+      <path
+         style="fill:none;stroke:context-stroke;stroke-width:1"
+         d="M 0,4 V -4"
+         id="path2" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Stop-7-0"
+       refX="0"
+       refY="0"
+       orient="auto"
+       markerWidth="1"
+       markerHeight="8"
+       viewBox="0 0 1 8"
+       preserveAspectRatio="xMidYMid">
+      <path
+         style="fill:none;stroke:context-stroke;stroke-width:1"
+         d="M 0,4 V -4"
+         id="path171-8-3" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="marker3"
+       refX="0"
+       refY="0"
+       orient="auto"
+       markerWidth="1"
+       markerHeight="8"
+       viewBox="0 0 1 8"
+       preserveAspectRatio="xMidYMid">
+      <path
+         style="fill:none;stroke:context-stroke;stroke-width:1"
+         d="M 0,4 V -4"
+         id="path3" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Stop-1"
+       refX="0"
+       refY="0"
+       orient="auto"
+       markerWidth="1"
+       markerHeight="8"
+       viewBox="0 0 1 8"
+       preserveAspectRatio="xMidYMid">
+      <path
+         style="fill:none;stroke:context-stroke;stroke-width:1"
+         d="M 0,4 V -4"
+         id="path171-9" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="marker4"
+       refX="0"
+       refY="0"
+       orient="auto"
+       markerWidth="1"
+       markerHeight="8"
+       viewBox="0 0 1 8"
+       preserveAspectRatio="xMidYMid">
+      <path
+         style="fill:none;stroke:context-stroke;stroke-width:1"
+         d="M 0,4 V -4"
+         id="path4" />
+    </marker>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient193"
+       id="linearGradient194"
+       x1="49.862453"
+       y1="80.150932"
+       x2="72.271439"
+       y2="80.150932"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.98091574,0,0,0.58839542,1.1432345,34.440418)" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-43.949404,-55.465218)">
+    <g
+       id="g194">
+      <g
+         id="g1">
+        <rect
+           style="fill:#fcf0bb;fill-opacity:1;stroke:#856b41;stroke-width:0.446;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+           id="rect131"
+           width="4.555047"
+           height="22.432564"
+           x="-54.62825"
+           y="-78.127312"
+           transform="scale(-1)" />
+        <rect
+           style="fill:#fcf0bb;fill-opacity:1;stroke:#856b41;stroke-width:0.446;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+           id="rect131-3"
+           width="4.555047"
+           height="22.432564"
+           x="-60.456146"
+           y="-78.162743"
+           transform="scale(-1)" />
+        <rect
+           style="fill:#fcf0bb;fill-opacity:1;stroke:#856b41;stroke-width:0.446;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+           id="rect131-3-6"
+           width="4.555047"
+           height="22.432564"
+           x="-66.1978"
+           y="-78.14753"
+           transform="scale(-1)" />
+        <rect
+           style="fill:#fcf0bb;fill-opacity:1;stroke:#856b41;stroke-width:0.446;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+           id="rect131-3-6-7"
+           width="4.555047"
+           height="22.432564"
+           x="-72.047974"
+           y="-78.176048"
+           transform="scale(-1)" />
+        <path
+           style="fill:url(#linearGradient194);fill-opacity:1;stroke:#000000;stroke-width:0.665;stroke-dasharray:none;stroke-dashoffset:0.224854;stroke-opacity:1;marker-start:url(#Stop-7);marker-end:url(#Stop-7);stop-color:#000000"
+           d="m 50.183914,81.601154 16.788767,-4.55e-4 4.932935,-1.33e-4"
+           id="path4943-45"
+           sodipodi:nodetypes="ccc" />
+        <path
+           style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.665;stroke-dasharray:none;stroke-dashoffset:0.454444;stroke-opacity:1;marker-start:url(#Stop-7-0);marker-end:url(#Stop-7-0);stop-color:#000000"
+           d="m 46.610419,55.797838 -10e-4,22.11844"
+           id="path4943-45-6" />
+      </g>
+    </g>
+  </g>
+</svg>
