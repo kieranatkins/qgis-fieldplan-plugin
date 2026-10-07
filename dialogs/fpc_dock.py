@@ -484,30 +484,15 @@ class FPCDockWidget(QgsDockWidget):
 
     def _initialize_layers(self):
         crs = QgsProject.instance().crs().authid()
-        # setup each layer, will try to empty existing layer if pos, otherwise create new layer
-        try:
-            self.fieldplan_layer.dataProvider().truncate()
-            self.fieldplan_layer.triggerRepaint()
-        except (RuntimeError, AttributeError):
-            self.fieldplan_layer = QgsVectorLayer(f"Polygon?crs={crs}", "Fieldplan", "memory")
+        # setup each layer, deletes exisiting layers and creates new ones
 
-        try:
-            self.guidance_layer.dataProvider().truncate()
-            self.guidance_layer.triggerRepaint()
-        except (RuntimeError, AttributeError):
-            self.guidance_layer = QgsVectorLayer(f"Linestring?crs={crs}", "Guidance lines", "memory")
+        layers = [self.fieldplan_layer, self.guidance_layer, self.alley_layer, self.boundary_layer]
+        QgsProject.instance().removeMapLayers(layers)
 
-        try:
-            self.alley_layer.dataProvider().truncate()
-            self.alley_layer.triggerRepaint()
-        except (RuntimeError, AttributeError):
-            self.alley_layer = QgsVectorLayer(f"Linestring?crs={crs}", "Alley lines", "memory")
-
-        try:
-            self.boundary_layer.dataProvider().truncate()
-            self.boundary_layer.triggerRepaint()
-        except (RuntimeError, AttributeError):
-            self.boundary_layer = QgsVectorLayer(f"Linestring?crs={crs}", "Grid boundaries", "memory")
+        self.fieldplan_layer = QgsVectorLayer(f"Polygon?crs={crs}", "Fieldplan", "memory")
+        self.guidance_layer = QgsVectorLayer(f"Linestring?crs={crs}", "Guidance lines", "memory")
+        self.alley_layer = QgsVectorLayer(f"Linestring?crs={crs}", "Alley lines", "memory")
+        self.boundary_layer = QgsVectorLayer(f"Linestring?crs={crs}", "Grid boundaries", "memory")
 
     def _show_help(self):
         btn = self.sender()
@@ -622,6 +607,12 @@ class FPCDockWidget(QgsDockWidget):
             QMessageBox.information(self, 'Fieldplan parameter error', str(e))
 
     def _run_action(self):
+        # check crs
+        crs = QgsProject.instance().crs()
+        if crs.isGeographic():
+            QMessageBox.critical(self, 'Unsupported CRS', 'CRS cannot be geographic (e.g. WGS 84), must be projected (e.g. UTM)')
+            return
+
         # Get current values
         self.log_box.setPlainText("")
         params = self._process_parameters()
