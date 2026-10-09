@@ -467,27 +467,39 @@ class FPCDockWidget(QgsDockWidget):
         layout.addWidget(param_group_3)
         layout.addWidget(self.run_btn)
 
-        # Stretch at the end
-        layout.addStretch()
-
+        # progress bar and log
         self.progress = QProgressBar()
         self.progress.setMaximum(100)
         layout.addWidget(self.progress)
 
-        # Status label
         self.log_box = QTextEdit()
         self.log_box.setReadOnly(True)
         self.log_box.setMinimumHeight(150)
         self.log_box.setPlaceholderText("Log")
-
         layout.addWidget(self.log_box)
+
+        # add logos
+        logos = QSvgWidget(os.path.join(self.icon_base, "logos.svg"))
+        logos.renderer().setAspectRatioMode(Qt.AspectRatioMode.KeepAspectRatio)
+        logos.setMinimumHeight(64)
+
+        layout.addWidget(logos)
+
+        # Stretch at the end
+        layout.addStretch()
+
 
     def _initialize_layers(self):
         crs = QgsProject.instance().crs().authid()
         # setup each layer, deletes exisiting layers and creates new ones
 
         layers = [self.fieldplan_layer, self.guidance_layer, self.alley_layer, self.boundary_layer]
-        QgsProject.instance().removeMapLayers(layers)
+        for l in layers:
+            if l is not None:
+                try:
+                    QgsProject.instance().removeMapLayer(l.id())
+                except RuntimeError:
+                    pass 
 
         self.fieldplan_layer = QgsVectorLayer(f"Polygon?crs={crs}", "Fieldplan", "memory")
         self.guidance_layer = QgsVectorLayer(f"Linestring?crs={crs}", "Guidance lines", "memory")
@@ -619,6 +631,13 @@ class FPCDockWidget(QgsDockWidget):
         self.progress.setValue(0)
         if params is None:
             return
+        
+        self._log('Parameters:')
+        for k, v in params.items():
+            if type(v) == QgsPointXY:
+                self._log(f'\t{k} = {v.x()}, {v.y()}')
+            else:
+                self._log(f'\t{k} = {v}')
 
         self._initialize_layers()
 
@@ -764,13 +783,6 @@ class FPCDockWidget(QgsDockWidget):
             num_row = max(num_row, f['row'])
         
         self._log(f'{len(features)} total features created with {num_col} columns, {num_row} rows and {len(features) // params['subplots']} plots.')
-        self._log('Parameters:')
-        for k, v in params.items():
-            if type(v) == QgsPointXY:
-                self._log(f'\t{k} = {v.x()}, {v.y()}')
-            else:
-                self._log(f'\t{k} = {v}')
-
 
         self.fieldplan_layer.commitChanges()
         self.fieldplan_layer.updateExtents()
