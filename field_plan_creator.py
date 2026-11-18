@@ -26,8 +26,8 @@ class FieldPlanCreator:
         self.toolbar = None
 
         # Dock widgets (lazy loaded)
-        self._dock = None
-        self._settings_dock = None
+        self._polygon_dock = None
+        self._point_dock = None
 
     def add_action(
         self,
@@ -85,16 +85,29 @@ class FieldPlanCreator:
         self.icon_base = icon_base
 
         # Main panel icon - use custom icon or fallback to QGIS default
-        main_icon = os.path.join(icon_base, "icon.png")
-        if not os.path.exists(main_icon):
-            main_icon = ":/images/themes/default/mActionAddRasterLayer.svg"
+        polygon_icon = os.path.join(icon_base, "icon.png")
+        if not os.path.exists(polygon_icon):
+            polygon_icon = ":/images/themes/default/mActionAddRasterLayer.svg"
+
+        points_icon = os.path.join(icon_base, "icon_points.png")
+        if not os.path.exists(points_icon):
+            points_icon = ":/images/themes/default/mActionAddRasterLayer.svg"
 
         # Add Sample Panel action (checkable for dock toggle)
-        self.action = self.add_action(
-            main_icon,
-            "Field plan creator",
-            self.toggle_dock,
-            status_tip="Toggle field plan creator",
+        self.polygon_action = self.add_action(
+            polygon_icon,
+            "Field plan creator (polygons)",
+            self.toggle_polygon_dock,
+            status_tip="Toggle field plan creator (polygons)",
+            checkable=True,
+            parent=self.iface.mainWindow(),
+        )
+
+        self.point_action = self.add_action(
+            points_icon,
+            "Field plan creator (points)",
+            self.toggle_point_dock,
+            status_tip="Toggle field plan creator (points)",
             checkable=True,
             parent=self.iface.mainWindow(),
         )
@@ -102,10 +115,15 @@ class FieldPlanCreator:
     def unload(self):
         """Remove the plugin menu item and icon from QGIS GUI."""
         # Remove dock widgets
-        if self._dock:
-            self.iface.removeDockWidget(self._dock)
-            self._dock.deleteLater()
-            self._dock = None
+        if self._polygon_dock:
+            self.iface.removeDockWidget(self._polygon_dock)
+            self._polygon_dock.deleteLater()
+            self._polygon_dock = None
+
+        if self._point_dock:
+            self.iface.removeDockWidget(self._point_dock)
+            self._point_dock.deleteLater()
+            self._point_dock = None
 
         # Remove actions from menu
         for action in self.actions:
@@ -115,26 +133,26 @@ class FieldPlanCreator:
         if self.toolbar:
             del self.toolbar
 
-    def toggle_dock(self):
+    def toggle_polygon_dock(self):
         """Toggle the Sample dock widget visibility."""
-        if self._dock is None:
+        if self._polygon_dock is None:
             try:
-                from .dialogs.fpc_dock import FPCDockWidget
+                from .dialogs.polygon_dock import FPCPolygonDockWidget
 
-                self._dock = FPCDockWidget(
+                self._polygon_dock = FPCPolygonDockWidget(
                     self.iface, 
                     self.iface.mainWindow(),
                     self.icon_base
                 )
-                self._dock.setObjectName("FieldPlanCreatorFPCDockWidget")
-                self._dock.visibilityChanged.connect(
-                    self._on_sample_visibility_changed
+                self._polygon_dock.setObjectName("FieldPlanCreatorPolygonFPCDockWidget")
+                self._polygon_dock.visibilityChanged.connect(
+                    self._on_polygon_visibility_changed
                 )
                 self.iface.addDockWidget(
-                    Qt.DockWidgetArea.RightDockWidgetArea, self._dock
+                    Qt.DockWidgetArea.RightDockWidgetArea, self._polygon_dock
                 )
-                self._dock.show()
-                self._dock.raise_()
+                self._polygon_dock.show()
+                self._polygon_dock.raise_()
                 return
 
             except Exception as e:
@@ -143,16 +161,58 @@ class FieldPlanCreator:
                     "Error",
                     f"Failed to create field plan creator panel:\n{str(e)}",
                 )
-                self.action.setChecked(False)
+                self.polygon_action.setChecked(False)
                 return
 
         # Toggle visibility
-        if self._dock.isVisible():
-            self._dock.hide()
+        if self._polygon_dock.isVisible():
+            self._polygon_dock.hide()
         else:
-            self._dock.show()
-            self._dock.raise_()
+            self._polygon_dock.show()
+            self._polygon_dock.raise_()
 
-    def _on_sample_visibility_changed(self, visible):
+    def toggle_point_dock(self):
+        """Toggle the Sample dock widget visibility."""
+        if self._point_dock is None:
+            try:
+                from .dialogs.point_dock import FPCPointDockWidget
+
+                self._point_dock = FPCPointDockWidget(
+                    self.iface, 
+                    self.iface.mainWindow(),
+                    self.icon_base
+                )
+                self._point_dock.setObjectName("FieldPlanCreatorPolygonFPCDockWidget")
+                self._point_dock.visibilityChanged.connect(
+                    self._on_point_visibility_changed
+                )
+                self.iface.addDockWidget(
+                    Qt.DockWidgetArea.RightDockWidgetArea, self._point_dock
+                )
+                self._point_dock.show()
+                self._point_dock.raise_()
+                return
+
+            except Exception as e:
+                QMessageBox.critical(
+                    self.iface.mainWindow(),
+                    "Error",
+                    f"Failed to create field plan creator panel:\n{str(e)}",
+                )
+                self.point_action.setChecked(False)
+                return
+
+        # Toggle visibility
+        if self._point_dock.isVisible():
+            self._point_dock.hide()
+        else:
+            self._point_dock.show()
+            self._point_dock.raise_()
+
+    def _on_polygon_visibility_changed(self, visible):
         """Handle Sample dock visibility change."""
-        self.action.setChecked(visible)
+        self.polygon_action.setChecked(visible)
+
+    def _on_point_visibility_changed(self, visible):
+        """Handle Sample dock visibility change."""
+        self.point_action.setChecked(visible)

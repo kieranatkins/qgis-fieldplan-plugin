@@ -169,6 +169,68 @@ def _create_field_plan(params):
 
     return polygons, grid_ids, column_ids, row_ids, plot_ids
 
+def _create_field_plan_points(params):
+    origin_x, origin_y = params['origin'].x(), params['origin'].y()
+    grid_origin_x, grid_origin_y = params['margin'][0], params['margin'][1]
+    bearing = params['bearing_radians']
+    left = params['is_left']
+    grid_gap = params['grid_gap']
+    grid_rows = [int(r) for r in params['rows']]
+    grid_cols = [int(c) for c in params['columns']]
+    one = params['1']
+    two = params['2']
+    radius = params['radius']
+
+    points = []
+    polygons = []
+    grid_ids = []
+    column_ids = []
+    row_ids = []
+
+    grid_gap = grid_gap + [0] # Add a zero so last iteration has final grid gap value
+
+    # Iterate over each grid
+    for b, (cols, rows, a, gg) in enumerate(zip(grid_cols, grid_rows, two, grid_gap)):
+        for row in range(rows):
+            for col in range(cols):
+                # calculate point
+                x = grid_origin_x + (col * one)
+                y = grid_origin_y + (row * a)
+
+                # calculate polygon
+                tl_x, tl_y = x - radius, y + radius
+                tr_x, tr_y = x + radius, y + radius
+                br_x, br_y = x + radius, y - radius
+                bl_x, bl_y = x - radius, y - radius
+
+                # rotate point
+                rotated_x = x * math.cos(bearing) - y * math.sin(bearing)
+                rotated_y = x * math.sin(bearing) + y * math.cos(bearing)
+                x = origin_x + rotated_x
+                x = origin_y - rotated_y
+
+                # rotate polygon
+                polygon = []
+                for x, y in [(bl_x, bl_y), (tl_x, tl_y), (tr_x, tr_y), (br_x, br_y)]:
+                    x = x if left else -x
+                    rotated_x = x * math.cos(bearing) - y * math.sin(bearing)
+                    rotated_y = x * math.sin(bearing) + y * math.cos(bearing)
+
+                    x = origin_x + rotated_x
+                    y = origin_y - rotated_y
+
+                    polygon.append((x, y))
+
+                points.append((x, y))
+                polygons.append(polygon)
+                row_ids.append(int(row+1))
+                column_ids.append(int(col+1))
+                grid_ids.append(int(b+1))
+
+        grid_origin_y += a * (rows - 1) + gg
+
+    return points, polygons, grid_ids, column_ids, row_ids
+
 def _calculate_lines(features, ppc, boundary_margin, bearing):
     # each feat dict {'polygon':[(x, y), (x, y), (x, y), (x, y)] (in form bottom left, top left, top right, bottom right), etc.}
 
@@ -224,7 +286,6 @@ def _calculate_lines(features, ppc, boundary_margin, bearing):
         grids[f['grid']].append(f)
 
     # Calculate alley lines and grid boundaries
-    # Something wrong with the logic to find the edge boundaries for both alleys lines and grid boundaries
     al_coords = []
     al_rows = []
     al_grid = []
@@ -321,7 +382,150 @@ def _calculate_lines(features, ppc, boundary_margin, bearing):
         bl_grid.append(grid_id)
 
     return gl_coords, gl_cols, al_coords, al_rows, al_grid, bl_coords, bl_grid
+
+def _calculate_lines_points(features, boundary_margin, bearing):
+    # each feat dict {'polygon':[(x, y), (x, y), (x, y), (x, y)] (in form bottom left, top left, top right, bottom right), etc.}
+    # calculate guidance lines
+    gl_coords = []
+    gl_cols = []
+    cols = defaultdict(list)
+    for f in features:
+        cols[f['col']].append(f)
         
+    for col_id, col in cols.items():
+        # calculate bounding box for row then find line that intersects
+        grids = [f['grid'] for f in col]
+        max_grid_rows = [f for f in col if f['grid'] == max(grids)]
+        min_grid_rows = [f for f in col if f['grid'] == min(grids)]
+        max_row = [f for f in max_grid_rows if f['row'] == max([f['row'] for f in max_grid_rows])]
+        min_row = [f for f in min_grid_rows if f['row'] == min([f['row'] for f in min_grid_rows])]
+
+        p1 = [(f['point'].x(), f['point'].y()) for f in min_row][0]       # the lowest row shape bl coord
+        p2 = [(f['point'].x(), f['point'].y()) for f in max_row][0]       # the highest row shape tr coord
+
+        x1, y1 = p1
+        x2, y2 = p2
+
+        # Create a 1 meter buffer beyond the edges of the guidance lines
+        dx = x2 - x1
+        dy = y2 - y1
+        
+        # Calculate length of the vector
+        length = math.sqrt(dx*dx + dy*dy)
+        
+        # Normalize the direction vector
+        if length > 0:
+            ux = dx / length
+            uy = dy / length
+        else:
+            ux, uy = 0, 0
+        
+        # Extend by 1 unit on each side
+        x1_extended = x1 - ux
+        y1_extended = y1 - uy
+        x2_extended = x2 + ux
+        y2_extended = y2 + uy
+
+        gl_coords.append([x1_extended, y1_extended, x2_extended, y2_extended])
+        gl_cols.append(col_id)
+
+    # Calculate alley lines and grid boundaries
+    al_coords = []
+    al_rows = []
+    al_grid = []
+
+    bl_coords = []
+    bl_grid = []
+
+    for grid_id, grid in grids.items():
+        rows = defaultdict(list)
+        for f in grid:
+            rows[f['row']].append(f)
+        
+        row_keys = sorted(list(rows.keys()), key=int)
+        for rk1, rk2 in zip(row_keys, row_keys[1:]):
+            # calculate bounding box of the alley between rows within a grid
+            row1 = rows[rk1]
+            row2 = rows[rk2]
+
+            cols_row1 = [f['col'] for f in row1]
+            # feedback.pushInfo(f'{rk1}: {len(row1)}, {len(cols_row1)}, {max(cols_row1)}, {min(cols_row1)} {rk2}: {len(row2)}')
+            min_col_row1 = [f for f in row1 if f['col'] == min(cols_row1)]
+            max_col_row1 = [f for f in row1 if f['col'] == max(cols_row1)]
+
+            cols_row2 = [f['col'] for f in row2]
+            min_col_row2 = [f for f in row2 if f['col'] == min(cols_row2)]
+            max_col_row2 = [f for f in row2 if f['col'] == max(cols_row2)]
+
+            bl = [(f['point'].x(), f['point'].y()) for f in min_col_row1][0]  # The shape in the 1st row first col, the first plot, and the 1st (tl) coord
+            br = [(f['point'].x(), f['point'].y()) for f in max_col_row1][0]  # The shape in the 1st row last col, the last plot, and the 2nd (tr) coord
+            tl = [(f['point'].x(), f['point'].y()) for f in min_col_row2][0]  # The shape in the 2nd row first col, the first plot, and the 0th (bl) coord
+            tr = [(f['point'].x(), f['point'].y()) for f in max_col_row2][0]  # The shape in the 2nd row last col, the last plot, and the 3rd (br) coord
+
+            x1, y1 = (bl[0] + tl[0]) / 2, (bl[1] + tl[1]) / 2
+            x2, y2 = (br[0] + tr[0]) / 2, (br[1] + tr[1]) / 2
+
+            al_coords.append([x1, y1, x2, y2])
+            al_rows.append(rk1)
+            al_grid.append(grid_id)
+
+        # # Calculate bounding box of grid - change this so the grid boundaries are for the widest row, not the upper and lower ones
+        # row1 = rows[min(rows.keys())]
+        # row2 = rows[max(rows.keys())]
+
+        # # Find top and bottom boundaries       
+        # cols_row1 = [f['col'] for f in row1]
+        # min_col_row1 = [f for f in row1 if f['col'] == min(cols_row1)]
+        # max_col_row1 = [f for f in row1 if f['col'] == max(cols_row1)]
+
+        # cols_row2 = [f['col'] for f in row2]
+        # min_col_row2 = [f for f in row2 if f['col'] == min(cols_row2)]
+        # max_col_row2 = [f for f in row2 if f['col'] == max(cols_row2)]
+
+        # lower_l = [(f['point'].x(), f['point'].y()) for f in min_col_row1][0]      # the first rows min column, the first shapes bl coord
+        # lower_r = [(f['point'].x(), f['point'].y()) for f in max_col_row1][0]      # the first rows max column, the last shapes br coord
+        # upper_l = [(f['point'].x(), f['point'].y()) for f in min_col_row2][0]      # the last rows min column, the first shapes tl coord
+        # upper_r = [(f['point'].x(), f['point'].y()) for f in max_col_row2][0]         # the last rows max column, the last shapes tr coord
+
+        # # Find left and right boundaries
+        # wide_row_id = max(rows.keys(), key=lambda x: len(rows[x]))
+        # wide_row = rows[wide_row_id]
+        # wide_row_cols = [f['col'] for f in wide_row]
+        
+        # left = [(f['point'].x(), f['point'].y()) and f['col'] == min(wide_row_cols)][0]
+        # right = [(f['point'].x(), f['point'].y()) and f['col'] == max(wide_row_cols)][0]
+
+        # top = [*upper_l, *upper_r]
+        # bottom = [*lower_l, *lower_r]
+        # left = [*left_u, *left_l]
+        # right = [*right_u, *right_l]
+        
+        # tr, br, bl, tl = _four_lines_intersect(top, right, bottom, left)
+
+        # # adjust for margins
+        # x_margin = boundary_margin * math.sin(bearing)
+        # y_margin = boundary_margin * math.cos(bearing)
+        # tr, tl = (tr[0] - x_margin, tr[1] - y_margin), (tl[0] - x_margin, tl[1] - y_margin)
+        # br, bl = (br[0] + x_margin, br[1] + y_margin), (bl[0] + x_margin, bl[1] + y_margin)
+
+        # b1 = [*bl, *br]
+        # b2 = [*tl, *tr]
+
+        # bl_coords.append(b1)
+        # bl_grid.append(grid_id)
+
+        # bl_coords.append(b2)
+        # bl_grid.append(grid_id)
+        
+        bl_coords.append(0)
+        bl_grid.append(0)
+
+        bl_coords.append(0)
+        bl_grid.append(0)
+
+
+    # calculate grid boundaries
+
 def _get_board_ids(value, grid_size):
     grid_index = value // grid_size
     start = grid_index * grid_size

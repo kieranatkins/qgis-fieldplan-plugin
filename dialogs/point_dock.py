@@ -36,6 +36,7 @@ from qgis.core import (
     QgsPointXY,
     Qgis,
     QgsGeometry,
+    QgsCircle,
     QgsFeature,
     QgsField,
     QgsFields,
@@ -49,10 +50,11 @@ try:
 except ImportError:
     from qgis.PyQt.QtSvg import QSvgWidget
 
-from ._fieldplan import _calculate_bearing, _find_line_point_distance, _create_field_plan, _get_board_ids, _calculate_lines
+from ._fieldplan import _calculate_bearing, _find_line_point_distance, _create_field_plan_points, _calculate_lines_points
 from._help_messages import HELP_DICT
 
-FIELDPLAN_LAYER_NAME = "Field plan"
+FIELDPLAN_LAYER_NAME_POINT = "Point field plan"
+FIELDPLAN_LAYER_NAME_POLY = "Polygon field plan"
 
 
 class CSVDoubleValidator(QValidator):
@@ -118,7 +120,7 @@ class CSVIntValidator(QValidator):
 
         return (QValidator.State.Invalid, text, pos)
 
-class FPCDockWidget(QgsDockWidget):
+class FPCPointDockWidget(QgsDockWidget):
     """A sample dockable panel for demonstrating plugin functionality."""
 
     def __init__(self, iface, parent=None, icon_base=None):
@@ -137,7 +139,8 @@ class FPCDockWidget(QgsDockWidget):
             Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
         )
 
-        self.fieldplan_layer = None
+        self.fieldplan_point_layer = None
+        self.fieldplan_polygon_layer = None
         self.guidance_layer = None
         self.alley_layer = None
         self.boundary_layer = None
@@ -225,7 +228,7 @@ class FPCDockWidget(QgsDockWidget):
         self.setWidget(scroll_area)
 
         # Diagram
-        diagram = QSvgWidget(os.path.join(self.icon_base, "diagram.svg"))
+        diagram = QSvgWidget(os.path.join(self.icon_base, "diagram_points.svg"))
         diagram.renderer().setAspectRatioMode(Qt.AspectRatioMode.KeepAspectRatio)
         diagram.setMinimumHeight(512)
         
@@ -352,16 +355,20 @@ class FPCDockWidget(QgsDockWidget):
         grid_gap_controls.addWidget(self.help_btns['grid_gap'])
         param_layout_1.addRow("Grid gap:", grid_gap_controls)
 
-        # subplots
-        subplots_controls = QHBoxLayout()
-        self.subplot_input = QLineEdit("1")
-        self.subplot_input.setValidator(QIntValidator())
-        self.help_btns['subplots'] = QPushButton()
-        subplots_controls.addWidget(self.subplot_input)
-        subplots_controls.addWidget(self.help_btns['subplots'])
-        param_layout_1.addRow('Subplots:', subplots_controls)
+        # type
+        controls = QHBoxLayout()
+        combo = QComboBox()
+        combo.addItem("None")
+        combo.addItem("Square")
+        combo.addItem("Circle")
+        btn = QPushButton()
+        controls.addWidget(combo)
+        controls.addWidget(btn)
+        param_layout_1.addRow("Type:", controls)
+        self.polygon_type_combo = combo
+        self.help_btns['shape_type'] = btn
 
-        # grid params
+        ### grid params ###
         param_group_2 = QGroupBox("Grid parameters")
         param_layout_2 = QFormLayout(param_group_2)
 
@@ -381,33 +388,38 @@ class FPCDockWidget(QgsDockWidget):
             self.grid_params[key] = te
             self.help_btns[key] = btn
 
-        # then grid params that accept doubles
-        grid_float_param_names = ['1', '2', '3']
-        for n in grid_float_param_names:
-            key = n.lower()
-            controls = QHBoxLayout()
-            te = QLineEdit()
-            te.setValidator(QDoubleValidator())
-            btn = QPushButton()
-            controls.addWidget(te)
-            controls.addWidget(btn)
-            param_layout_2.addRow(f'{n}:', controls)
-            self.grid_params[key] = te
-            self.help_btns[key] = btn
+        # 1
+        controls = QHBoxLayout()
+        te = QLineEdit()
+        te.setValidator(QDoubleValidator())
+        btn = QPushButton()
+        controls.addWidget(te)
+        controls.addWidget(btn)
+        param_layout_2.addRow('1:', controls)
+        self.grid_params['1'] = te
+        self.help_btns['1'] = btn
 
-        # then grid params that accept CSV doubles
-        grid_float_param_names = ['4', '5']
-        for n in grid_float_param_names:
-            key = n.lower()
-            controls = QHBoxLayout()
-            te = QLineEdit()
-            te.setValidator(CSVDoubleValidator())
-            btn = QPushButton()
-            controls.addWidget(te)
-            controls.addWidget(btn)
-            param_layout_2.addRow(f'{n}:', controls)
-            self.grid_params[key] = te
-            self.help_btns[key] = btn
+        # 2
+        controls = QHBoxLayout()
+        te = QLineEdit()
+        te.setValidator(CSVDoubleValidator())
+        btn = QPushButton()
+        controls.addWidget(te)
+        controls.addWidget(btn)
+        param_layout_2.addRow('2:', controls)
+        self.grid_params['2'] = te
+        self.help_btns['2'] = btn
+
+        # radius
+        controls = QHBoxLayout()
+        te = QLineEdit()
+        te.setValidator(QDoubleValidator())
+        btn = QPushButton()
+        controls.addWidget(te)
+        controls.addWidget(btn)
+        param_layout_2.addRow('Radius:', controls)
+        self.grid_params['radius'] = te
+        self.help_btns['radius'] = btn
 
         # outputs
         param_group_3 = QGroupBox("Output options")
@@ -415,8 +427,6 @@ class FPCDockWidget(QgsDockWidget):
 
         output_checkbox_names = [
             'Column serpentine ID',
-            'Subplot serpentine ID',
-            'Reverse subplot ID',
             'Return guidance lines',
             'Return alley lines',
             'Return grid boundaries',
@@ -488,12 +498,11 @@ class FPCDockWidget(QgsDockWidget):
         # Stretch at the end
         layout.addStretch()
 
-
     def _initialize_layers(self):
         crs = QgsProject.instance().crs().authid()
         # setup each layer, deletes exisiting layers and creates new ones
 
-        layers = [self.fieldplan_layer, self.guidance_layer, self.alley_layer, self.boundary_layer]
+        layers = [self.fieldplan_point_layer, self.fieldplan_polygon_layer, self.guidance_layer, self.alley_layer, self.boundary_layer]
         for l in layers:
             if l is not None:
                 try:
@@ -501,7 +510,8 @@ class FPCDockWidget(QgsDockWidget):
                 except RuntimeError:
                     pass 
 
-        self.fieldplan_layer = QgsVectorLayer(f"Polygon?crs={crs}", "Fieldplan", "memory")
+        self.fieldplan_point_layer = QgsVectorLayer(f"Point?crs={crs}", "Fieldplan", "memory")
+        self.fieldplan_polygon_layer = QgsVectorLayer(f"Polygon?crs={crs}", "Fieldplan", "memory")
         self.guidance_layer = QgsVectorLayer(f"Linestring?crs={crs}", "Guidance lines", "memory")
         self.alley_layer = QgsVectorLayer(f"Linestring?crs={crs}", "Alley lines", "memory")
         self.boundary_layer = QgsVectorLayer(f"Linestring?crs={crs}", "Grid boundaries", "memory")
@@ -586,21 +596,21 @@ class FPCDockWidget(QgsDockWidget):
             text = self.grid_gap_input.text().split(',')
             assert len(text) == 1 or len(text) == params['grid_number']-1, "Inconsistent number of values in \"grid gap\" for the \"grid number\""
             params['grid_gap'] = [float(v) for v in text] if len(text) > 1 else [float(text[0])] * n
-            params['subplots'] = int(self.subplot_input.text())
+            params['polygon_type'] = self.polygon_type_combo.currentText()
 
             # grid parameters
-            csv_grid_params = ['rows', 'columns', '4', '5']
-            for k in csv_grid_params:
-                v = self.grid_params[k]
-                text = v.text().split(',')
-                assert len(text) == 1 or len(text) == n, f"Inconsistent number of values in \"{k}\" for the \"grid number\""
-                params[k] = [float(x) for x in text] if len(text) == n else [float(text[0])] * n
-
             # other grid params
-            non_csv_grid_params = ['1', '2', '3']
+            non_csv_grid_params = ['1', 'radius']
             for k in non_csv_grid_params:
                 v = self.grid_params[k].text()
-                params[k] = float(v)
+                params[k] = float(v) if v.strip() != "" else 0
+ 
+            csv_grid_params = ['rows', 'columns', '2']
+            for k in csv_grid_params:
+                v = self.grid_params[k]
+                v = v.text().split(',')
+                assert len(v) == 1 or len(v) == n, f"Inconsistent number of values in \"{k}\" for the \"grid number\""
+                params[k] = [float(x) for x in v] if len(v) == n else [float(v[0])] * n
 
             # output parameters
             for k, v in self.output_checkboxes.items():
@@ -608,7 +618,6 @@ class FPCDockWidget(QgsDockWidget):
 
             params['grid_boundary_margin'] = 0 if self.guidance_line_margin_input.text().strip() == "" else float(self.guidance_line_margin_input.text())
 
-            assert params['subplots'] > 0
             assert all([r > 0 for r in params['rows']])
             assert all([c > 0 for c in params['columns']])
 
@@ -641,34 +650,43 @@ class FPCDockWidget(QgsDockWidget):
 
         self._initialize_layers()
 
-        provider = self.fieldplan_layer.dataProvider()
+        fieldplan_point_provider = self.fieldplan_point_layer.dataProvider()
         fields = QgsFields()
         fields.append(QgsField("id", QMetaType.Type.Int))
         fields.append(QgsField("grid", QMetaType.Type.Int))
         fields.append(QgsField("row", QMetaType.Type.Int))
         fields.append(QgsField("col", QMetaType.Type.Int))
-        fields.append(QgsField("plot", QMetaType.Type.Int))
         fields.append(QgsField("roc", QMetaType.Type.QString))
-        provider.addAttributes(fields)
-        self.fieldplan_layer.updateFields()
+        fieldplan_point_provider.addAttributes(fields)
+        self.fieldplan_point_layer.updateFields()
+
+        fieldplan_polygon_provider = self.fieldplan_polygon_layer.dataProvider()
+        fields = QgsFields()
+        fields.append(QgsField("id", QMetaType.Type.Int))
+        fields.append(QgsField("grid", QMetaType.Type.Int))
+        fields.append(QgsField("row", QMetaType.Type.Int))
+        fields.append(QgsField("col", QMetaType.Type.Int))
+        fields.append(QgsField("roc", QMetaType.Type.QString))
+        fieldplan_polygon_provider.addAttributes(fields)
+        self.fieldplan_polygon_layer.updateFields()
 
         self.progress.setValue(5)
 
         # build field plan
         # self.status_label.setText("Generating polygons...")
         params['bearing_radians'] = math.radians(params['bearing'] - 180)
-        polygons, grid_ids, column_ids, row_ids, plot_ids = _create_field_plan(params)
+        points, polygons, grid_ids, column_ids, row_ids = _create_field_plan_points(params)
         features = []
-        for p, grid_id, col_id, row_id, plot_id in zip(polygons, grid_ids, column_ids, row_ids, plot_ids):
-            feat = dict(polygon=p, 
+        for p, poly, grid_id, col_id, row_id in zip(points, polygons, grid_ids, column_ids, row_ids):
+            feat = dict(point=p,
+                        polygon=poly, 
                         grid=grid_id,
                         col=col_id,
-                        row=row_id,
-                        plot=plot_id)
+                        row=row_id)
             features.append(feat)
         self.progress.setValue(30)
 
-        # Check all shapes fit within field boundary, only keep those that fit
+        # Check all points fit within field boundary, only keep those that fit
         if params['field_boundary'] is not None:
             field_boundary = params['field_boundary']
             # self.status_label.setText('Removing shapes outside field boundary...') 
@@ -684,14 +702,14 @@ class FPCDockWidget(QgsDockWidget):
             outside_field_ids = []
             n_deleted = 0
             for i, feat in enumerate(features):
-                polygon = [QgsPointXY(x,y) for x,y in feat['polygon']]
-                polygon = QgsGeometry.fromPolygonXY([polygon])
+                x, y = feat['point']
+                point = QgsPointXY(x,y)
                 keep = True
 
                 # Bounding box pre-check
-                if not boundary_bbox.contains(polygon.boundingBox()):
+                if not boundary_bbox.contains(point):
                     keep = False
-                elif not boundary_engine.contains(polygon.constGet()):
+                elif not boundary_engine.contains(point):
                     keep = False
 
                 if not keep:
@@ -702,12 +720,7 @@ class FPCDockWidget(QgsDockWidget):
                 scaled = 30 + prog_value * (60 - 30)
                 self.progress.setValue(int(scaled))
             
-            # This portion very slow it seems, not 100% sure why
-            remove_set = set()
-            for i in outside_field_ids:
-                ids = _get_board_ids(i, params['subplots'])
-                remove_set.update(ids)
-            features = [f for i, f in enumerate(features) if i not in remove_set]
+            features = [f for i, f in enumerate(features) if i not in outside_field_ids]
             # self.status_label.setText(f'{n_deleted} shapes deleted outside the field boundary.')        
 
         self.progress.setValue(60) 
@@ -715,13 +728,12 @@ class FPCDockWidget(QgsDockWidget):
         # Calculate lines
         if params['return_guidance_lines'] or params['return_alley_lines'] or params['return_grid_boundaries']:
             # self.status_label.setText('Calculating lines...')
-            gl_coords, gt_cols, al_coords, al_rows, al_grid, bl_coords, bl_grid = _calculate_lines(features, params['subplots'], params['grid_boundary_margin'], params['bearing_radians'])
+            gl_coords, gt_cols, al_coords, al_rows, al_grid, bl_coords, bl_grid = _calculate_lines_points(features, params['subplots'], params['grid_boundary_margin'], params['bearing_radians'])
             self.progress.setValue(65)
 
         # self.status_label.setText('Renumbering IDs...')
         ## Renumber IDs after deleted
         renumbered_id = 1
-        subplots_serpentine_switch = False if params['reverse_subplot_id'] else True
         col_serpentine_switch = True
 
         # group records by col and iterate
@@ -740,26 +752,19 @@ class FPCDockWidget(QgsDockWidget):
             
             for grid_id in grids.keys():
                 grid = grids[grid_id]
-                rows = defaultdict(list)
+                rows = {}
 
                 # group records by row, then iterate over each plot
                 for f in grid:
                     rows[f['row']].append(f)
                 
-                for row_id in rows.keys():
-                    board = rows[row_id]
-                    board = board if subplots_serpentine_switch else reversed(board)
-
-                    for j, feat in enumerate(board, start=1):
-                        feat['id'] = int(renumbered_id)
-                        feat['grid'] = int(grid_id)
-                        feat['row'] = int(row_id)
-                        feat['col'] = int(col_id)
-                        feat['plot'] = int(j)
-                        renumbered_id += 1
+                for row_id, f in rows.items():
+                    f['id'] = int(renumbered_id)
+                    f['grid'] = int(grid_id)
+                    f['row'] = int(row_id)
+                    f['col'] = int(col_id)
+                    renumbered_id += 1
                     
-                    subplots_serpentine_switch = not subplots_serpentine_switch if params['subplot_serpentine_id'] else True
-
             prog_value = i / len(cols.keys())
             scaled = 65 + prog_value * (80 - 65)
             self.progress.setValue(60)
@@ -770,23 +775,38 @@ class FPCDockWidget(QgsDockWidget):
 
         num_col = 0
         num_row = 0
-        self.fieldplan_layer.startEditing()
+        self.fieldplan_point_layer.startEditing()
+        self.fieldplan_polygon_layer.startEditing()
         
         for f in features:
             feat = QgsFeature()
-            polygon = [QgsPointXY(x,y) for x,y in f['polygon']]
-            feat.setGeometry(QgsGeometry.fromPolygonXY([polygon]))
-            feat.setAttributes([f['id'], f['grid'], f['row'], f['col'], f['plot'], f'{f["row"]} / {f["col"]}'])
-            provider.addFeature(feat)
+            feat.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(*f['point'])))
+            feat.setAttributes([f['id'], f['grid'], f['row'], f['col'], f'{f["row"]} / {f["col"]}'])
+            fieldplan_point_provider.addFeature(feat)
 
             num_col = max(num_col, f['col'])
             num_row = max(num_row, f['row'])
-        
-        self._log(f'{len(features)} total features created with {num_col} columns, {num_row} rows and {len(features) // params['subplots']} plots.')
 
-        self.fieldplan_layer.commitChanges()
-        self.fieldplan_layer.updateExtents()
-        QgsProject.instance().addMapLayer(self.fieldplan_layer)
+        if params['polygon_type'] != 'None':
+            for f in features:
+                feat = QgsFeature()
+                if params['polygon_type'] == 'Polygon':
+                    polygon = [QgsPointXY(x,y) for x,y in f['polygon']]
+                    feat.setGeometry(QgsGeometry.fromPolygonXY([polygon]))
+                elif params['polygon_type'] == 'Circle':
+                    feat.setGeometry(QgsCircle((QgsGeometry.fromPointXY(f['point'])), radius=params['radius']))
+                feat.setAttributes([f['id'], f['grid'], f['row'], f['col'], f'{f["row"]} / {f["col"]}'])
+                fieldplan_polygon_provider.addFeature(feat)
+
+        self._log(f'{len(features)} total features created with {num_col} max columns and {num_row} max rows')
+
+        self.fieldplan_point_layer.commitChanges()
+        self.fieldplan_point_layer.updateExtents()
+        QgsProject.instance().addMapLayer(self.fieldplan_point_layer)
+
+        self.fieldplan_polygon_layer.commitChanges()
+        self.fieldplan_polygon_layer.updateExtents()
+        QgsProject.instance().addMapLayer(self.fieldplan_polygon_layer)
 
         if params['return_guidance_lines']:
             self.guidance_layer.startEditing()

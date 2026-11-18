@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="28.288794mm"
+   height="28.795948mm"
+   viewBox="0 0 28.288793 28.795948"
+   version="1.1"
+   id="svg1"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1">
+    <linearGradient
+       id="linearGradient193">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop193" />
+      <stop
+         style="stop-color:#000000;stop-opacity:0;"
+         offset="1"
+         id="stop194" />
+    </linearGradient>
+    <marker
+       style="overflow:visible"
+       id="Stop-7"
+       refX="0"
+       refY="0"
+       orient="auto"
+       markerWidth="1"
+       markerHeight="8"
+       viewBox="0 0 1 8"
+       preserveAspectRatio="xMidYMid">
+      <path
+         style="fill:none;stroke:context-stroke;stroke-width:1"
+         d="M 0,4 V -4"
+         id="path171-8" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Stop-7-0"
+       refX="0"
+       refY="0"
+       orient="auto"
+       markerWidth="1"
+       markerHeight="8"
+       viewBox="0 0 1 8"
+       preserveAspectRatio="xMidYMid">
+      <path
+         style="fill:none;stroke:context-stroke;stroke-width:1"
+         d="M 0,4 V -4"
+         id="path171-8-3" />
+    </marker>
+    <linearGradient
+       xlink:href="#linearGradient193"
+       id="linearGradient194"
+       x1="49.862453"
+       y1="80.150932"
+       x2="72.271439"
+       y2="80.150932"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.98091574,0,0,0.58839542,1.1432345,34.440418)" />
+  </defs>
+  <g
+     id="layer1"
+     transform="translate(-43.949404,-55.465218)">
+    <g
+       id="g1">
+      <path
+         style="fill:url(#linearGradient194);fill-opacity:1;stroke:#000000;stroke-width:0.665;stroke-dasharray:none;stroke-dashoffset:0.224854;stroke-opacity:1;marker-start:url(#Stop-7);marker-end:url(#Stop-7);stop-color:#000000"
+         d="m 50.183914,81.601154 16.788767,-4.55e-4 4.932935,-1.33e-4"
+         id="path4943-45" />
+      <path
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.665;stroke-dasharray:none;stroke-dashoffset:0.454444;stroke-opacity:1;marker-start:url(#Stop-7-0);marker-end:url(#Stop-7-0);stop-color:#000000"
+         d="m 46.610419,55.797838 -10e-4,22.11844"
+         id="path4943-45-6" />
+      <rect
+         style="fill:#fcf0bb;fill-opacity:1;stroke:#856b41;stroke-width:0.445999;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+         id="rect131-2-7"
+         width="8.5540009"
+         height="8.5540009"
+         x="-59.165913"
+         y="-65.070381"
+         transform="scale(-1)" />
+      <g
+         id="g189-6-9-1"
+         transform="translate(4.87022,-59.352569)">
+        <rect
+           style="fill:#000000;stroke:none;stroke-width:0.264998;stroke-miterlimit:3.9"
+           id="rect4-2-3-8"
+           width="0.89042044"
+           height="5.1517181"
+           x="-50.034679"
+           y="117.75308"
+           transform="rotate(-45.005167)" />
+        <rect
+           style="fill:#000000;stroke:none;stroke-width:0.264998;stroke-miterlimit:3.9"
+           id="rect4-7-9-6-7"
+           width="0.89042044"
+           height="5.1517181"
+           x="120.20221"
+           y="46.217255"
+           transform="rotate(45.378555)" />
+      </g>
+      <rect
+         style="fill:#fcf0bb;fill-opacity:1;stroke:#856b41;stroke-width:0.445999;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+         id="rect131-2-7-3"
+         width="8.5540009"
+         height="8.5540009"
+         x="-71.30983"
+         y="-65.070381"
+         transform="scale(-1)" />
+      <rect
+         style="fill:#000000;stroke:none;stroke-width:0.264998;stroke-miterlimit:3.9"
+         id="rect4-2-3-8-0"
+         width="0.89042044"
+         height="5.1517181"
+         x="3.9674358"
+         y="87.82016"
+         transform="rotate(-45.005167)" />
+      <rect
+         style="fill:#000000;stroke:none;stroke-width:0.264998;stroke-miterlimit:3.9"
+         id="rect4-7-9-6-7-6"
+         width="0.89042044"
+         height="5.1517181"
+         x="89.908295"
+         y="-7.5831842"
+         transform="rotate(45.378555)" />
+      <rect
+         style="fill:#fcf0bb;fill-opacity:1;stroke:#856b41;stroke-width:0.445999;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+         id="rect131-2-7-6"
+         width="8.5540009"
+         height="8.5540009"
+         x="-59.200207"
+         y="-76.984276"
+         transform="scale(-1)" />
+      <g
+         id="g189-6-9-1-5"
+         transform="translate(4.9045168,-47.438672)">
+        <rect
+           style="fill:#000000;stroke:none;stroke-width:0.264998;stroke-miterlimit:3.9"
+           id="rect4-2-3-8-6"
+           width="0.89042044"
+           height="5.1517181"
+           x="-50.034679"
+           y="117.75308"
+           transform="rotate(-45.005167)" />
+        <rect
+           style="fill:#000000;stroke:none;stroke-width:0.264998;stroke-miterlimit:3.9"
+           id="rect4-7-9-6-7-9"
+           width="0.89042044"
+           height="5.1517181"
+           x="120.20221"
+           y="46.217255"
+           transform="rotate(45.378555)" />
+      </g>
+      <rect
+         style="fill:#fcf0bb;fill-opacity:1;stroke:#856b41;stroke-width:0.445999;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+         id="rect131-2-7-3-7"
+         width="8.5540009"
+         height="8.5540009"
+         x="-71.344124"
+         y="-76.984276"
+         transform="scale(-1)" />
+      <g
+         id="g189-6-9-1-2-4"
+         transform="translate(17.048434,-47.438672)">
+        <rect
+           style="fill:#000000;stroke:none;stroke-width:0.264998;stroke-miterlimit:3.9"
+           id="rect4-2-3-8-0-5"
+           width="0.89042044"
+           height="5.1517181"
+           x="-50.034679"
+           y="117.75308"
+           transform="rotate(-45.005167)" />
+        <rect
+           style="fill:#000000;stroke:none;stroke-width:0.264998;stroke-miterlimit:3.9"
+           id="rect4-7-9-6-7-6-2"
+           width="0.89042044"
+           height="5.1517181"
+           x="120.20221"
+           y="46.217255"
+           transform="rotate(45.378555)" />
+      </g>
+    </g>
+  </g>
+</svg>
