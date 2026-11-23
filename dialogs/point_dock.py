@@ -34,9 +34,11 @@ from qgis.core import (
     QgsVectorLayer,
     QgsWkbTypes,
     QgsPointXY,
+    QgsPoint,
     Qgis,
     QgsGeometry,
     QgsCircle,
+    QgsCurvePolygon,
     QgsFeature,
     QgsField,
     QgsFields,
@@ -510,8 +512,8 @@ class FPCPointDockWidget(QgsDockWidget):
                 except RuntimeError:
                     pass 
 
-        self.fieldplan_point_layer = QgsVectorLayer(f"Point?crs={crs}", "Fieldplan", "memory")
-        self.fieldplan_polygon_layer = QgsVectorLayer(f"Polygon?crs={crs}", "Fieldplan", "memory")
+        self.fieldplan_point_layer = QgsVectorLayer(f"Point?crs={crs}", "Fieldplan (points)", "memory")
+        self.fieldplan_polygon_layer = QgsVectorLayer(f"Polygon?crs={crs}", "Fieldplan (polygons)", "memory")
         self.guidance_layer = QgsVectorLayer(f"Linestring?crs={crs}", "Guidance lines", "memory")
         self.alley_layer = QgsVectorLayer(f"Linestring?crs={crs}", "Alley lines", "memory")
         self.boundary_layer = QgsVectorLayer(f"Linestring?crs={crs}", "Grid boundaries", "memory")
@@ -752,18 +754,19 @@ class FPCPointDockWidget(QgsDockWidget):
             
             for grid_id in grids.keys():
                 grid = grids[grid_id]
-                rows = {}
+                rows = defaultdict(list)
 
                 # group records by row, then iterate over each plot
                 for f in grid:
                     rows[f['row']].append(f)
                 
-                for row_id, f in rows.items():
-                    f['id'] = int(renumbered_id)
-                    f['grid'] = int(grid_id)
-                    f['row'] = int(row_id)
-                    f['col'] = int(col_id)
-                    renumbered_id += 1
+                for row_id, plots in rows.items():
+                    for f in plots:
+                        f['id'] = int(renumbered_id)
+                        f['grid'] = int(grid_id)
+                        f['row'] = int(row_id)
+                        f['col'] = int(col_id)
+                        renumbered_id += 1
                     
             prog_value = i / len(cols.keys())
             scaled = 65 + prog_value * (80 - 65)
@@ -790,23 +793,28 @@ class FPCPointDockWidget(QgsDockWidget):
         if params['polygon_type'] != 'None':
             for f in features:
                 feat = QgsFeature()
-                if params['polygon_type'] == 'Polygon':
+                if params['polygon_type'] == 'Square':
                     polygon = [QgsPointXY(x,y) for x,y in f['polygon']]
                     feat.setGeometry(QgsGeometry.fromPolygonXY([polygon]))
                 elif params['polygon_type'] == 'Circle':
-                    feat.setGeometry(QgsCircle((QgsGeometry.fromPointXY(f['point'])), radius=params['radius']))
+                    poly = QgsCurvePolygon()
+                    poly.setExteriorRing(QgsCircle(QgsPoint(*f['point']), params['radius']).toCircularString())
+                    geom = QgsGeometry(poly.toPolygon())
+                    feat.setGeometry(geom)
                 feat.setAttributes([f['id'], f['grid'], f['row'], f['col'], f'{f["row"]} / {f["col"]}'])
                 fieldplan_polygon_provider.addFeature(feat)
 
         self._log(f'{len(features)} total features created with {num_col} max columns and {num_row} max rows')
 
+        if params['polygon_type'] != 'None':
+            self.fieldplan_polygon_layer.commitChanges()
+            self.fieldplan_polygon_layer.updateExtents()
+            QgsProject.instance().addMapLayer(self.fieldplan_polygon_layer)
+
+        # add points last to be on top
         self.fieldplan_point_layer.commitChanges()
         self.fieldplan_point_layer.updateExtents()
         QgsProject.instance().addMapLayer(self.fieldplan_point_layer)
-
-        self.fieldplan_polygon_layer.commitChanges()
-        self.fieldplan_polygon_layer.updateExtents()
-        QgsProject.instance().addMapLayer(self.fieldplan_polygon_layer)
 
         if params['return_guidance_lines']:
             self.guidance_layer.startEditing()

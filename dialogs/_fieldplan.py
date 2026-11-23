@@ -204,11 +204,13 @@ def _create_field_plan_points(params):
                 bl_x, bl_y = x - radius, y - radius
 
                 # rotate point
+                x = x if left else -x
                 rotated_x = x * math.cos(bearing) - y * math.sin(bearing)
                 rotated_y = x * math.sin(bearing) + y * math.cos(bearing)
                 x = origin_x + rotated_x
-                x = origin_y - rotated_y
-
+                y = origin_y - rotated_y
+                points.append((x, y))
+                
                 # rotate polygon
                 polygon = []
                 for x, y in [(bl_x, bl_y), (tl_x, tl_y), (tr_x, tr_y), (br_x, br_y)]:
@@ -220,9 +222,8 @@ def _create_field_plan_points(params):
                     y = origin_y - rotated_y
 
                     polygon.append((x, y))
-
-                points.append((x, y))
                 polygons.append(polygon)
+
                 row_ids.append(int(row+1))
                 column_ids.append(int(col+1))
                 grid_ids.append(int(b+1))
